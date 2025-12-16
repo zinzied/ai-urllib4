@@ -1,5 +1,5 @@
 """
-Integration tests for urllib4 enhanced features.
+Integration tests for ai_urllib4 enhanced features.
 
 This test file tests the interaction between different enhanced features.
 """
@@ -10,20 +10,20 @@ import socket
 import ssl
 import time
 
-import urllib4
-from urllib4.http2 import ConnectionProfile, FlowControlStrategy, HTTP2Settings
-from urllib4.util.cert_verification import CertificateTransparencyPolicy, SPKIPinningVerifier
-from urllib4.util.hsts import HSTSCache, HSTSHandler, HSTSPolicy
-from urllib4.websocket import WebSocketConnection, WebSocketMessage
+import ai_urllib4
+from ai_urllib4.http2 import ConnectionProfile, FlowControlStrategy, HTTP2Settings
+from ai_urllib4.util.cert_verification import CertificateTransparencyPolicy, SPKIPinningVerifier
+from ai_urllib4.util.hsts import HSTSCache, HSTSHandler, HSTSPolicy
+from ai_urllib4.websocket import WebSocketConnection, WebSocketMessage
 
 
 class TestEnhancedFeaturesIntegration(unittest.TestCase):
-    """Test integration of enhanced urllib4 features."""
+    """Test integration of enhanced ai_urllib4 features."""
 
     def setUp(self):
         """Set up test fixtures."""
         # Create a pool manager with enhanced features
-        self.http = urllib4.PoolManager(
+        self.http = ai_urllib4.PoolManager(
             cert_reqs=ssl.CERT_REQUIRED,
             ca_certs=ssl.get_default_verify_paths().cafile,
         )
@@ -50,18 +50,18 @@ class TestEnhancedFeaturesIntegration(unittest.TestCase):
         self.pin_verifier = SPKIPinningVerifier(self.pins)
 
         # Set up CT verification
-        self.ct_verifier = urllib4.util.cert_verification.CertificateTransparencyVerifier(
+        self.ct_verifier = ai_urllib4.util.cert_verification.CertificateTransparencyVerifier(
             policy=CertificateTransparencyPolicy.BEST_EFFORT
         )
 
     def test_http2_with_security_features(self):
         """Test HTTP/2 with security features."""
         # Enable HTTP/2
-        urllib4.http2.inject_into_urllib4()
+        ai_urllib4.http2.inject_into_ai_urllib4()
 
         try:
             # Create a pool manager with HTTP/2 and security features
-            http = urllib4.PoolManager(
+            http = ai_urllib4.PoolManager(
                 cert_reqs=ssl.CERT_REQUIRED,
                 ca_certs=ssl.get_default_verify_paths().cafile,
                 http2_connection_profile=ConnectionProfile.HIGH_PERFORMANCE,
@@ -102,12 +102,12 @@ class TestEnhancedFeaturesIntegration(unittest.TestCase):
 
         finally:
             # Restore HTTP/1.1
-            urllib4.http2.extract_from_urllib4()
+            ai_urllib4.http2.extract_from_ai_urllib4()
 
     def test_websocket_with_security_features(self):
         """Test WebSocket with security features."""
         # Mock the WebSocketConnection to avoid actual network calls
-        with mock.patch('urllib4.websocket.WebSocketConnection') as mock_ws_class:
+        with mock.patch('ai_urllib4.websocket.WebSocketConnection') as mock_ws_class:
             # Mock the connect method
             mock_ws = mock.Mock()
             mock_ws_class.return_value = mock_ws
@@ -121,7 +121,7 @@ class TestEnhancedFeaturesIntegration(unittest.TestCase):
             self.assertEqual(secured_url, "wss://example.com/ws")
 
             # Connect to the WebSocket
-            urllib4.websocket_connect(secured_url)
+            ai_urllib4.websocket_connect(secured_url)
 
             # Verify the WebSocketConnection was created with the secured URL
             mock_ws_class.assert_called_once()
@@ -165,11 +165,11 @@ class TestEnhancedFeaturesIntegration(unittest.TestCase):
     def test_http2_websocket_upgrade(self):
         """Test upgrading an HTTP/2 connection to WebSocket."""
         # Enable HTTP/2
-        urllib4.http2.inject_into_urllib4()
+        ai_urllib4.http2.inject_into_ai_urllib4()
 
         try:
             # Create a pool manager with HTTP/2
-            http = urllib4.PoolManager(
+            http = ai_urllib4.PoolManager(
                 cert_reqs=ssl.CERT_REQUIRED,
                 ca_certs=ssl.get_default_verify_paths().cafile,
                 http2_connection_profile=ConnectionProfile.HIGH_PERFORMANCE,
@@ -189,8 +189,8 @@ class TestEnhancedFeaturesIntegration(unittest.TestCase):
                 mock_request.return_value = mock_response
 
                 # Mock the WebSocketConnection
-                with mock.patch('urllib4.websocket.connection.WebSocketConnection._send_frame'):
-                    with mock.patch('urllib4.websocket.connection.WebSocketConnection._start_receiver'):
+                with mock.patch('ai_urllib4.websocket.connection.WebSocketConnection._send_frame'):
+                    with mock.patch('ai_urllib4.websocket.connection.WebSocketConnection._start_receiver'):
                         # Connect to a WebSocket
                         url = "https://example.com/ws"
 
@@ -215,7 +215,7 @@ class TestEnhancedFeaturesIntegration(unittest.TestCase):
 
         finally:
             # Restore HTTP/1.1
-            urllib4.http2.extract_from_urllib4()
+            ai_urllib4.http2.extract_from_ai_urllib4()
 
 
 if __name__ == "__main__":

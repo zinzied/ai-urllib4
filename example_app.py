@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-Example Application using urllib4-enhanced
+Example Application using ai_urllib4-enhanced
 
-This script demonstrates how to use the urllib4-enhanced library for various HTTP requests.
+This script demonstrates how to use the ai_urllib4-enhanced library for various HTTP requests.
 """
 
-import urllib4
+import ai_urllib4
 import json
 import time
 import concurrent.futures
 from typing import Dict, List, Any
 
 class WebAPIClient:
-    """A client for interacting with web APIs using urllib4-enhanced"""
+    """A client for interacting with web APIs using ai_urllib4-enhanced"""
 
     def __init__(self, base_url: str, timeout: float = 10.0):
         """Initialize the client with a base URL"""
@@ -29,7 +29,7 @@ class WebAPIClient:
         print(f"Making GET request to {url}")
         start_time = time.time()
 
-        response = urllib4.request("GET", url, timeout=self.timeout)
+        response = ai_urllib4.request("GET", url, timeout=self.timeout)
         elapsed = time.time() - start_time
 
         data = response.read()
@@ -62,7 +62,7 @@ class WebAPIClient:
             "Accept": "application/json"
         }
 
-        response = urllib4.request(
+        response = ai_urllib4.request(
             "POST",
             url,
             headers=headers,
@@ -108,8 +108,8 @@ class WebAPIClient:
         return results
 
 def main():
-    """Main function demonstrating the use of urllib4-enhanced"""
-    print("=== urllib4-enhanced Example Application ===\n")
+    """Main function demonstrating the use of ai_urllib4-enhanced"""
+    print("=== ai_urllib4-enhanced Example Application ===\n")
 
     # Create a client for the JSONPlaceholder API
     client = WebAPIClient("https://jsonplaceholder.typicode.com")
@@ -122,8 +122,8 @@ def main():
     # Example 2: POST request with JSON data
     print("\n=== Example 2: POST request with JSON data ===")
     new_post = {
-        "title": "urllib4-enhanced Example",
-        "body": "This post was created using urllib4-enhanced",
+        "title": "ai_urllib4-enhanced Example",
+        "body": "This post was created using ai_urllib4-enhanced",
         "userId": 1
     }
     post_response = client.post("posts", new_post)
