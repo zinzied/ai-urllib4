@@ -5,12 +5,12 @@
 </h1>
 
 <p align="center">
-  <a href="https://github.com/zinzied/urllib4-enhanced"><img alt="Project Status" src="https://img.shields.io/badge/status-production--ready-green" /></a>
-  <a href="https://github.com/zinzied/urllib4-enhanced"><img alt="Python Versions" src="https://img.shields.io/badge/python-3.7%2B-blue" /></a>
-  <a href="https://github.com/zinzied/urllib4-enhanced"><img alt="Development Stage" src="https://img.shields.io/badge/stage-stable-green" /></a>
+  <a href="https://github.com/zinzied/ai-urllib4"><img alt="Project Status" src="https://img.shields.io/badge/status-production--ready-green" /></a>
+  <a href="https://github.com/zinzied/ai-urllib4"><img alt="Python Versions" src="https://img.shields.io/badge/python-3.7%2B-blue" /></a>
+  <a href="https://github.com/zinzied/ai-urllib4"><img alt="Development Stage" src="https://img.shields.io/badge/stage-stable-green" /></a>
 </p>
 
-urllib4 is a modern HTTP client for Python that builds upon the foundation of urllib3 while adding enhancements for modern web applications. It provides a powerful yet user-friendly interface for making HTTP requests with advanced features.
+ai-urllib4 is a modern HTTP client for Python that builds upon the foundation of urllib3 while adding enhancements for modern web applications. It provides a powerful yet user-friendly interface for making HTTP requests with advanced features.
 
 ## Features
 
@@ -64,30 +64,30 @@ b"User-agent: *\nDisallow: /deny\n"
 
 ## Installation
 
-You can install urllib4-enhanced with pip:
+You can install urllib4 with pip:
 
 ```bash
-$ pip install urllib4-enhanced
+$ pip install urllib4
 ```
 
 For additional features, you can install optional dependencies:
 
 ```bash
 # For HTTP/3 support
-$ pip install urllib4-enhanced[http3]
+$ pip install urllib4[http3]
 
 # For WebSocket subprotocols
-$ pip install urllib4-enhanced[websocket]
+$ pip install urllib4[websocket]
 
 # For all optional features
-$ pip install urllib4-enhanced[all]
+$ pip install urllib4[all]
 ```
 
 Alternatively, you can install from source:
 
 ```bash
-$ git clone https://github.com/zinzied/urllib4-enhanced.git
-$ cd urllib4-enhanced
+$ git clone https://github.com/zinzied/urllib4.git
+$ cd urllib4
 $ pip install -e .
 ```
 
@@ -96,8 +96,8 @@ $ pip install -e .
 To set up a development environment:
 
 ```bash
-$ git clone https://github.com/zinzied/urllib4-enhanced.git
-$ cd urllib4-enhanced
+$ git clone https://github.com/zinzied/urllib4.git
+$ cd urllib4
 $ pip install -e ".[dev]"
 ```
 
@@ -239,8 +239,42 @@ conn.close()
 inject_into_urllib4()
 
 # Now all HTTPS requests will automatically use HTTP/3 when available
-http = urllib4.PoolManager()
+http = urllib5.PoolManager()
 response = http.request("GET", "https://cloudflare-quic.com/")
+```
+
+### 🤖 AI-Powered Smart Config
+
+ai-urllib4 includes an experimental AI module that suggests optimal connection parameters based on URL heuristics.
+
+```python
+from ai_urllib4.ai import AISmartConfig, optimize_params_for
+
+# Get a suggested timeout for an API endpoint
+timeout = AISmartConfig.suggest_timeout("https://api.example.com/v1/users")
+print(f"Suggested Timeout: {timeout}s")
+
+# Get a full set of optimized parameters
+params = optimize_params_for("https://cdn.example.com/big-file.zip")
+print(f"Optimized Params: {params}")
+# Output: {'timeout': 60.0, 'retries': 3}
+```
+
+### 🚀 AsyncIO Support
+
+First-class support for `asyncio` and `anyio` is now available.
+
+```python
+import asyncio
+from ai_urllib4.async_connectionpool import connection_from_url
+
+async def main():
+    pool = connection_from_url("http://httpbin.org")
+    response = await pool.urlopen("GET", "/get")
+    print(response)
+    await pool.close()
+
+asyncio.run(main())
 ```
 
 ### Enhanced Security Features (Planned)

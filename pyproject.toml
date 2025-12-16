@@ -3,8 +3,8 @@ requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "urllib4-enhanced"
-version = "1.1.2"
+name = "ai-urllib4"
+version = "2.0.1"
 description = "A modern HTTP client for Python with HTTP/3, WebSocket extensions, and enhanced security features"
 readme = "README.md"
 license = "MIT"
@@ -50,6 +50,9 @@ http2 = [
 http3 = [
   "aioquic>=0.9.20",
   "netifaces>=0.11.0"
+]
+async = [
+  "anyio>=3.0.0"
 ]
 websocket = [
   "idna>=2.0.0",
