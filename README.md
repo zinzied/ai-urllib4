@@ -321,21 +321,22 @@ This project is in its early stages and contributions are welcome! Here's how yo
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## Relationship to urllib3
+## Why ai-urllib4? (vs urllib3)
 
-urllib4 is inspired by urllib3 but is not an official successor. While we aim for compatibility where possible, this project is experimental and may diverge from urllib3's API:
+While `ai-urllib4` is built on the solid foundation of `urllib3`, it introduces key differences designed for modern, high-performance applications:
 
-```python
-# urllib3 usage
-import urllib3
-http = urllib3.PoolManager()
-response = http.request("GET", "https://example.com")
+| Feature | urllib3 | ai-urllib4 |
+|---------|---------|------------|
+| **Async Support** | ❌ Synchronous only (blocking) | ✅ **Native AsyncIO** (`async`/`await`) |
+| **Configuration** | Manual Tuning | 🤖 **AI Smart Config** (Heuristic optimization) |
+| **HTTP/2 & 3** | Experimental / Partial | ✅ **First-Class Support** (Multipath QUIC, etc.) |
+| **WebSocket** | Limited / Extension needed | ✅ **Built-in Advanced Support** (Subprotocols, etc.) |
 
-# Future urllib4 usage (when implemented)
-import urllib4
-http = urllib4.PoolManager()
-response = http.request("GET", "https://example.com")
-```
+### Key Differentiators:
+
+1.  **🚀 AsyncIO Support**: `ai-urllib4` allows non-blocking requests perfect for apps using `FastAPI`, `Quart`, or standard `asyncio`.
+2.  **🤖 AI-Powered Tuning**: The `AISmartConfig` module automatically suggests timeout and retry settings based on the target URL type (API vs Download).
+3.  **🔒 Modern Security**: Stronger focus on Certificate Transparency and SPKI Pinning out of the box.
 
 ## Security Considerations
 
