@@ -74,13 +74,13 @@ For additional features, you can install optional dependencies:
 
 ```bash
 # For HTTP/3 support
-$ pip install urllib4[http3]
+$ pip install ai-urllib4[http3]
 
 # For WebSocket subprotocols
-$ pip install urllib4[websocket]
+$ pip install ai-urllib4[websocket]
 
 # For all optional features
-$ pip install urllib4[all]
+$ pip install ai-urllib4[all]
 ```
 
 Alternatively, you can install from source:
