@@ -140,11 +140,13 @@ class WebSocketConnection:
         self._selected_extensions: list[str] = []
         self._extension_instances: list[WebSocketExtension] = []
         self._subprotocol_instance: WebSocketSubprotocol | None = None
+        self._handshake_response: HTTPResponse | None = None
 
         # Message handling
         self._message_queue: queue.Queue[WebSocketMessage | Exception] = queue.Queue()
         self._receiver_thread: threading.Thread | None = None
         self._receiver_running = False
+        self._initial_data: bytes = b""
         self._partial_message: list[WebSocketFrame] = []
         self._partial_opcode: WebSocketFrameType | None = None
 
@@ -233,6 +235,7 @@ class WebSocketConnection:
                 headers=handshake_headers,
                 timeout=connect_timeout,
                 retries=False,
+                preload_content=False,
             )
 
             # Check for successful handshake
@@ -304,8 +307,32 @@ class WebSocketConnection:
                                 break
 
             # Get the socket from the response
+            self._http_connection = response.connection
             self._sock = response.connection.sock  # type: ignore
+            self._handshake_response = response
 
+            # Check for buffered data in the original response
+            if hasattr(response, "original_response") and response.original_response:
+                orig_res = response.original_response
+                if hasattr(orig_res, "fp") and orig_res.fp:
+                    # Try to read any buffered data
+                    # The socket might have been read by http.client, leaving data in the buffer.
+                    # We must retrieve this data before using the raw socket.
+                    try:
+                        if hasattr(orig_res.fp, "peek"):
+                            peeked = orig_res.fp.peek()
+                            if peeked:
+                                # Data is available in buffer. Read it.
+                                # We use read(len(peeked)) to safely consume available bytes without blocking
+                                # if the implementation allows.
+                                # Alternatively, if read1 is available, use it.
+                                if hasattr(orig_res.fp, "read1"):
+                                    self._initial_data = orig_res.fp.read1(len(peeked))
+                                else:
+                                    self._initial_data = orig_res.fp.read(len(peeked))
+                    except Exception:
+                        pass
+            
             # Mark as connected
             self._connected = True
 
@@ -344,27 +371,35 @@ class WebSocketConnection:
         if self._sock is None:
             return
 
-        buffer = bytearray()
+        buffer = bytearray(self._initial_data)
+        self._initial_data = b""  # Clear initial data
+        
+        # Flag to skip first read if we have initial data
+        skip_read = len(buffer) > 0
 
         try:
             while self._receiver_running and not self._closed:
-                # Read data from the socket
-                try:
-                    data = self._sock.recv(4096)
-                    if not data:
-                        # Connection closed by the server
+                # Read data from the socket, unless we have initial data to process
+                if not skip_read:
+                    try:
+                        data = self._sock.recv(4096)
+                        if not data:
+                            # Connection closed by the server
+                            self._handle_connection_closed()
+                            break
+
+                        buffer.extend(data)
+                    except socket.timeout:
+                        # Socket timeout, just continue
+                        continue
+                    except (socket.error, OSError) as e:
+                        # Socket error
+                        self._message_queue.put(WebSocketError(f"WebSocket receive error: {e}"))
                         self._handle_connection_closed()
                         break
-
-                    buffer.extend(data)
-                except socket.timeout:
-                    # Socket timeout, just continue
-                    continue
-                except (socket.error, OSError) as e:
-                    # Socket error
-                    self._message_queue.put(WebSocketError(f"WebSocket receive error: {e}"))
-                    self._handle_connection_closed()
-                    break
+                
+                # Reset skip_read after first pass
+                skip_read = False
 
                 # Process all complete frames in the buffer
                 while buffer:

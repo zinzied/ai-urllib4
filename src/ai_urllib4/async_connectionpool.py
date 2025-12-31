@@ -30,6 +30,12 @@ class AsyncConnectionPool:
         """Close all connections in the pool."""
         pass
 
+    async def __aenter__(self) -> "AsyncConnectionPool":
+        return self
+
+    async def __aexit__(self, exc_type: typing.Any, exc_val: typing.Any, exc_tb: typing.Any) -> None:
+        await self.close()
+
 
 class AsyncHTTPConnectionPool(AsyncConnectionPool):
     """

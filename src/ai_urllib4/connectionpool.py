@@ -177,23 +177,36 @@ class HTTPConnectionPool(ConnectionPool):
             conn.request(method, path, body=body, headers=headers or {})
             res = conn.getresponse()
             
+            preload_content = response_kw.get("preload_content", True)
+            if preload_content:
+                response_body = res.read()
+            else:
+                response_body = None
+            
             response = HTTPResponse(
-                body=res.read(),
+                body=response_body,
                 headers=dict(res.getheaders()),
                 status=res.status,
                 version=res.version,
                 reason=res.reason,
-                preload_content=True,
+                preload_content=preload_content,
                 decode_content=True,
                 request_url=url,
+                connection=conn if not preload_content else None,
+                pool=self,
+                original_response=res,
             )
             return response
+        except Exception:
+            conn.close()
+            raise
         finally:
-            if release_conn:
-                self._put_conn(conn)
-            else:
-                conn.close()
-                self.num_connections -= 1
+            if response_kw.get("preload_content", True):
+                if release_conn:
+                    self._put_conn(conn)
+                else:
+                    conn.close()
+                    self.num_connections -= 1
 
 
 class HTTPSConnectionPool(HTTPConnectionPool):

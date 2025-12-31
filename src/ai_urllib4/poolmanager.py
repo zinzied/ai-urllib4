@@ -98,7 +98,7 @@ class PoolManager:
 
         # Merge global headers with request headers
         headers = self.headers.copy()
-        headers.update(kw.get("headers", {}))
+        headers.update(kw.get("headers") or {})
         kw["headers"] = headers
         
         pool = self.connection_from_url(url)
