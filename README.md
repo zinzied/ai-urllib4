@@ -308,13 +308,25 @@ async def main():
 asyncio.run(main())
 ```
 
-### Enhanced Security Features (Planned)
+### Enhanced Security Features
+
+urllib4 includes built-in support for advanced security features like HSTS, SPKI Pinning, and Certificate Transparency.
 
 ```python
-# This is a planned API - not yet implemented
 import urllib4
 from urllib4.util.cert_verification import SPKIPinningVerifier, CertificateTransparencyPolicy
 from urllib4.util.hsts import HSTSCache, HSTSHandler
+
+# HSTS is enabled by default in PoolManager and SmartClient
+# It automatically upgrades HTTP requests to HTTPS for known HSTS hosts
+client = urllib4.PoolManager()
+client.request("GET", "http://github.com") # Automatically upgrades to HTTPS
+
+# You can also manually manage HSTS policies
+hsts_cache = HSTSCache()
+hsts_handler = HSTSHandler(hsts_cache)
+url = "http://github.com"
+secured_url = hsts_handler.secure_url(url)  # Returns https://github.com if policy exists
 
 # Create a pool manager with SPKI pinning
 pins = {
@@ -324,14 +336,6 @@ http = urllib4.PoolManager(
     spki_pins=pins,
     cert_transparency_policy=CertificateTransparencyPolicy.BEST_EFFORT
 )
-
-# Create an HSTS handler
-hsts_cache = HSTSCache()
-hsts_handler = HSTSHandler(hsts_cache)
-
-# Secure a URL if needed
-url = "http://example.com/api"
-secured_url = hsts_handler.secure_url(url)  # Returns https://example.com/api if in HSTS cache
 ```
 
 ## Contributing
