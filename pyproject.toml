@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ai-urllib4"
-version = "2.1.4"
+version = "2.1.5"
 description = "A modern HTTP client for Python with HTTP/3, WebSocket extensions, and enhanced security features"
 readme = "README.md"
 license = "MIT"
@@ -49,7 +49,7 @@ http2 = [
 ]
 http3 = [
   "aioquic>=0.9.20",
-  "netifaces>=0.11.0"
+  "ifaddr>=0.1.7"
 ]
 async = [
   "anyio>=3.0.0"
@@ -69,7 +69,7 @@ all = [
   "PySocks>=1.5.6,<2.0,!=1.5.7",
   "h2>=4,<5",
   "aioquic>=0.9.20",
-  "netifaces>=0.11.0",
+  "ifaddr>=0.1.7",
   "msgpack>=1.0.4",
   "cbor2>=5.4.6",
   "cryptography>=38.0.0",

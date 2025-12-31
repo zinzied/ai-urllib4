@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="ai-urllib4",
-    version="2.1.4",
+    version="2.1.5",
     description="A modern HTTP client for Python with HTTP/3, WebSocket extensions, and enhanced security features",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -36,7 +36,7 @@ setup(
     ],
     extras_require={
         "http2": ["h2>=4.0.0"],
-        "http3": ["aioquic>=0.9.20", "netifaces>=0.11.0"],
+        "http3": ["aioquic>=0.9.20", "ifaddr>=0.1.7"],
         "async": ["anyio>=3.0.0"],
         "websocket": ["msgpack>=1.0.4", "cbor2>=5.4.6"],
         "brotli": ["brotli>=1.0.9"],
@@ -45,7 +45,7 @@ setup(
         "all": [
             "h2>=4.0.0",
             "aioquic>=0.9.20",
-            "netifaces>=0.11.0",
+            "ifaddr>=0.1.7",
             "msgpack>=1.0.4",
             "cbor2>=5.4.6",
             "brotli>=1.0.9",

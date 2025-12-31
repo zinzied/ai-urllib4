@@ -248,18 +248,18 @@ class HTTP3Connection:
             return
 
         try:
-            # Import netifaces conditionally to avoid hard dependency
+            # Import ifaddr conditionally to avoid hard dependency
             try:
-                import netifaces
+                import ifaddr
             except ImportError:
                 log.warning(
-                    "Multipath QUIC requires the netifaces package for interface discovery. "
-                    "Install with: pip install netifaces"
+                    "Multipath QUIC requires the ifaddr package for interface discovery. "
+                    "Install with: pip install ifaddr"
                 )
                 return
 
             # Get all network interfaces
-            interfaces = netifaces.interfaces()
+            adapters = ifaddr.get_adapters()
 
             # Get the primary path's local address
             primary_path = self._multipath_manager.get_primary_path()
@@ -270,27 +270,23 @@ class HTTP3Connection:
             primary_family = socket.AF_INET6 if ":" in primary_addr[0] else socket.AF_INET
 
             # Find additional interfaces
-            for interface in interfaces:
+            for adapter in adapters:
                 # Skip loopback interfaces
-                if interface.startswith(("lo", "Loopback")):
-                    continue
-
-                # Get addresses for this interface
-                addresses = netifaces.ifaddresses(interface)
-
-                # Process IPv4 addresses
-                if netifaces.AF_INET in addresses and primary_family == socket.AF_INET:
-                    for addr_info in addresses[netifaces.AF_INET]:
-                        ip = addr_info["addr"]
+                # ifaddr adapters usually have a nice name or IPs detecting loopback
+                
+                for ip_obj in adapter.ips:
+                    ip = ip_obj.ip
+                    
+                    # Handle IPv4
+                    if isinstance(ip, str):
+                         # Skip loopback addresses
+                        if ip.startswith("127."):
+                            continue
 
                         # Skip the primary address
                         if ip == primary_addr[0]:
                             continue
-
-                        # Skip loopback addresses
-                        if ip.startswith("127."):
-                            continue
-
+                            
                         # Create a socket for this interface
                         try:
                             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -305,23 +301,26 @@ class HTTP3Connection:
                         except Exception as e:
                             log.warning(f"Failed to add path for {ip}: {e}")
 
-                # Process IPv6 addresses
-                if netifaces.AF_INET6 in addresses and primary_family == socket.AF_INET6:
-                    for addr_info in addresses[netifaces.AF_INET6]:
-                        ip = addr_info["addr"]
-
-                        # Skip the primary address
-                        if ip == primary_addr[0]:
+                    # Handle IPv6 (tuple)
+                    elif isinstance(ip, tuple) and len(ip) >= 1:
+                        ip_str = ip[0]
+                        
+                        # Skip link-local addresses
+                        if ip_str.startswith("fe80:"):
+                            continue
+                            
+                        # Skip loopback
+                        if ip_str == "::1":
                             continue
 
-                        # Skip link-local addresses
-                        if ip.startswith("fe80:"):
+                        # Skip the primary address
+                        if ip_str == primary_addr[0]:
                             continue
 
                         # Create a socket for this interface
                         try:
                             sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-                            sock.bind((ip, 0))  # Bind to any port
+                            sock.bind((ip_str, 0))  # Bind to any port
 
                             # Add the path
                             local_addr = sock.getsockname()
@@ -330,7 +329,7 @@ class HTTP3Connection:
 
                             log.debug(f"Added additional path: {local_addr} -> {remote_addr}")
                         except Exception as e:
-                            log.warning(f"Failed to add path for {ip}: {e}")
+                            log.warning(f"Failed to add path for {ip_str}: {e}")
         except Exception as e:
             log.warning(f"Failed to discover additional paths: {e}")
 

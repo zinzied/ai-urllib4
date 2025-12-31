@@ -46,18 +46,18 @@ You can use urllib4 for your HTTP requests with a simple, intuitive API:
 
 ```python3
 # Simple GET request
->>> import urllib4
->>> resp = urllib4.request("GET", "http://httpbin.org/robots.txt")
+>>> import ai_urllib4
+>>> resp = ai_urllib4.request("GET", "http://httpbin.org/robots.txt")
 >>> resp.status
 200
 >>> resp.data
 b"User-agent: *\nDisallow: /deny\n"
 
 # POST request with JSON data
->>> import urllib4
+>>> import ai_urllib4
 >>> import json
 >>> data = {"name": "John", "age": 30}
->>> resp = urllib4.request(
+>>> resp = ai_urllib4.request(
 ...     "POST",
 ...     "http://httpbin.org/post",
 ...     headers={"Content-Type": "application/json"},
@@ -72,7 +72,7 @@ b"User-agent: *\nDisallow: /deny\n"
 You can install urllib4 with pip:
 
 ```bash
-$ pip install urllib4
+$ pip install ai-urllib4
 ```
 
 For additional features, you can install optional dependencies:
@@ -91,8 +91,8 @@ $ pip install ai-urllib4[all]
 Alternatively, you can install from source:
 
 ```bash
-$ git clone https://github.com/zinzied/urllib4.git
-$ cd urllib4
+$ git clone https://github.com/zinzied/ai-urllib4.git
+$ cd ai-urllib4
 $ pip install -e .
 ```
 
@@ -101,8 +101,8 @@ $ pip install -e .
 To set up a development environment:
 
 ```bash
-$ git clone https://github.com/zinzied/urllib4.git
-$ cd urllib4
+$ git clone https://github.com/zinzied/ai-urllib4.git
+$ cd ai-urllib4
 $ pip install -e ".[dev]"
 ```
 
@@ -136,14 +136,14 @@ The following features are planned for future development:
 ### HTTP/2 Support
 
 ```python
-import urllib4
-from urllib4.http2 import inject_into_urllib4, ConnectionProfile
+import ai_urllib4
+from ai_urllib4.http2 import inject_into_urllib4, ConnectionProfile
 
 # Enable HTTP/2 support
 inject_into_urllib4()
 
 # Create a pool manager with a specific connection profile
-http = urllib4.PoolManager(http2_profile=ConnectionProfile.HIGH_PERFORMANCE)
+http = ai_urllib4.PoolManager(http2_profile=ConnectionProfile.HIGH_PERFORMANCE)
 
 # Make a request (automatically uses HTTP/2 if the server supports it)
 response = http.request("GET", "https://nghttp2.org")
@@ -153,7 +153,7 @@ print(f"HTTP version: {response.version_string}")
 ### WebSocket Support
 
 ```python
-from urllib4.websocket import WebSocketConnection
+from ai_urllib4.websocket import WebSocketConnection
 
 # Connect to a WebSocket server with compression and health monitoring
 ws = WebSocketConnection(
@@ -211,8 +211,8 @@ urllib4 supports various WebSocket extensions and subprotocols:
 ### HTTP/3 Support
 
 ```python
-import urllib4
-from urllib4.http3 import HTTP3Connection, HTTP3Settings, QUICSettings, inject_into_urllib4
+import ai_urllib4
+from ai_urllib4.http3 import HTTP3Connection, HTTP3Settings, QUICSettings, inject_into_urllib4
 
 # Direct HTTP/3 usage
 quic_settings = QUICSettings(
@@ -240,11 +240,11 @@ print(f"Body: {response.data.decode()[:100]}...")
 # Close the connection
 conn.close()
 
-# Alternatively, inject HTTP/3 support into urllib4
+# Alternatively, inject HTTP/3 support into ai_urllib4
 inject_into_urllib4()
 
 # Now all HTTPS requests will automatically use HTTP/3 when available
-http = urllib4.PoolManager()
+http = ai_urllib4.PoolManager()
 response = http.request("GET", "https://cloudflare-quic.com/")
 ```
 
@@ -313,13 +313,13 @@ asyncio.run(main())
 urllib4 includes built-in support for advanced security features like HSTS, SPKI Pinning, and Certificate Transparency.
 
 ```python
-import urllib4
-from urllib4.util.cert_verification import SPKIPinningVerifier, CertificateTransparencyPolicy
-from urllib4.util.hsts import HSTSCache, HSTSHandler
+import ai_urllib4
+from ai_urllib4.util.cert_verification import SPKIPinningVerifier, CertificateTransparencyPolicy
+from ai_urllib4.util.hsts import HSTSCache, HSTSHandler
 
 # HSTS is enabled by default in PoolManager and SmartClient
 # It automatically upgrades HTTP requests to HTTPS for known HSTS hosts
-client = urllib4.PoolManager()
+client = ai_urllib4.PoolManager()
 client.request("GET", "http://github.com") # Automatically upgrades to HTTPS
 
 # You can also manually manage HSTS policies
@@ -332,7 +332,7 @@ secured_url = hsts_handler.secure_url(url)  # Returns https://github.com if poli
 pins = {
     "example.com": {"pin-sha256:YLh1dUR9y6Kja30RrAn7JKnbQG/uEtLMkBgFF2Fuihg="}
 }
-http = urllib4.PoolManager(
+http = ai_urllib4.PoolManager(
     spki_pins=pins,
     cert_transparency_policy=CertificateTransparencyPolicy.BEST_EFFORT
 )
