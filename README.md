@@ -35,6 +35,11 @@ urllib4 provides a comprehensive set of features for modern web applications:
 - Improved security features
 - HTTP/3 (QUIC) support with Multipath QUIC
 
+### ✅ AI Features:
+- Adaptive Headers & Request Optimization
+- Domain Memory (learns from success/failure)
+- Anomaly Detection & Smart Retries
+
 ## Usage Example
 
 You can use urllib4 for your HTTP requests with a simple, intuitive API:
@@ -239,26 +244,52 @@ conn.close()
 inject_into_urllib4()
 
 # Now all HTTPS requests will automatically use HTTP/3 when available
-http = urllib5.PoolManager()
+http = urllib4.PoolManager()
 response = http.request("GET", "https://cloudflare-quic.com/")
 ```
 
-### 🤖 AI-Powered Smart Config
+### AI-Powered Smart Client
 
-ai-urllib4 includes an experimental AI module that suggests optimal connection parameters based on URL heuristics.
+`SmartClient` is a high-level HTTP client that uses AI to learn from response patterns and optimize requests.
 
 ```python
-from ai_urllib4.ai import AISmartConfig, optimize_params_for
+from ai_urllib4 import SmartClient
+from ai_urllib4.exceptions import AIInitializationError
 
-# Get a suggested timeout for an API endpoint
-timeout = AISmartConfig.suggest_timeout("https://api.example.com/v1/users")
-print(f"Suggested Timeout: {timeout}s")
+try:
+    # Initialize with AI optimization and your choice of LLM backend
+    client = SmartClient(
+        ai_optimize=True,
+        learn_from_success=True,
+        api_key="YOUR_API_KEY",  # Optional: enables LLM-powered expert advice
+        ai_provider="gemini",    # Optional: "gemini" (default)
+        ai_model="gemini-1.5-flash"
+    )
+except AIInitializationError as e:
+    print(f"AI Initialization failed: {e}")
+    # Fallback to basic client without AI backend
+    client = SmartClient(ai_optimize=True)
 
-# Get a full set of optimized parameters
-params = optimize_params_for("https://cdn.example.com/big-file.zip")
-print(f"Optimized Params: {params}")
-# Output: {'timeout': 60.0, 'retries': 3}
+# AI will suggest optimal headers/timing and learn from the result
+response = client.request("GET", "https://example.com/api")
+
+# Access learned domain insights
+insights = client.get_domain_insights("example.com")
+print(f"Success rate for example.com: {insights['success_rate']}")
+
+# Detect anomalies or blocks
+# (e.g., detecting Cloudflare challenges or sudden protocol changes)
+anomaly = client.detect_anomaly(response)
+if anomaly["is_anomaly"]:
+    print(f"⚠️ Warning: {anomaly['reason']}")
 ```
+
+Key features:
+- **Request Pattern Learning**: Remembers successful timings and headers per domain.
+- **Response Classification**: Distinguishes between normal content, challenges (WAF), and blocks.
+- **Header Optimization**: Suggests and rotates headers based on learned history.
+- **Retry Intelligence**: Adapts retry logic using AI strategies (e.g., increasing delay after a 403).
+- **LLM Backends**: Supports pluggable AI expert advice via Gemini and others.
 
 ### 🚀 AsyncIO Support
 

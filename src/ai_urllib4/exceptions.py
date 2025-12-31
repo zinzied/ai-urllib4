@@ -101,6 +101,12 @@ class LocationParseError(LocationValueError):
         self.location = location
 
 
+class AIInitializationError(HTTPError, ValueError):
+    """Raised when AI backend initialization fails."""
+    pass
+
+
+
 class URLSchemeUnknown(LocationValueError):
     """Raised when a URL input has an unsupported scheme."""
 

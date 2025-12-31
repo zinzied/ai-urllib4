@@ -56,6 +56,8 @@ class HTTPConnectionPool(ConnectionPool):
         timeout=Timeout.DEFAULT_TIMEOUT,
         maxsize=1,
         block=False,
+        spki_pins=None,
+        cert_transparency_policy=None,
         **conn_kw,
     ):
         """
@@ -66,12 +68,16 @@ class HTTPConnectionPool(ConnectionPool):
         :param timeout: Socket timeout
         :param maxsize: Maximum number of connections to keep in the pool
         :param block: Whether to block when the pool is full
+        :param spki_pins: Dictionary mapping hostnames to sets of SPKI pins
+        :param cert_transparency_policy: Certificate Transparency policy
         :param conn_kw: Additional parameters for the connection
         """
         super().__init__(host, port)
         self.timeout = timeout
         self.maxsize = maxsize
         self.block = block
+        self.spki_pins = spki_pins
+        self.cert_transparency_policy = cert_transparency_policy
         self.conn_kw = conn_kw.copy() if conn_kw else {}
         self.num_connections = 0
         self.num_requests = 0
@@ -88,11 +94,8 @@ class HTTPConnectionPool(ConnectionPool):
     def _get_conn(self):
         """
         Get a connection from the pool.
-        
-        :return: A connection
-        :raises EmptyPoolError: If the pool is empty and blocking is disabled
-        :raises ClosedPoolError: If the pool is closed
         """
+        import socket
         if self.closed:
             raise ClosedPoolError(self, "Pool is closed")
             
@@ -100,13 +103,27 @@ class HTTPConnectionPool(ConnectionPool):
             if not self.block:
                 raise EmptyPoolError(self, "Pool is empty and blocking is disabled")
                 
+        # Handle Timeout object properly
+        timeout = self.timeout
+        if hasattr(timeout, "connect_timeout"):
+            timeout = timeout.connect_timeout
+        
+        if timeout is Timeout.DEFAULT_TIMEOUT or timeout is None:
+            timeout = socket._GLOBAL_DEFAULT_TIMEOUT
+
         # Create a new connection
         self.num_connections += 1
+        
+        conn_kw = self.conn_kw.copy()
+        if self.scheme == "https":
+            conn_kw["spki_pins"] = self.spki_pins
+            conn_kw["cert_transparency_policy"] = self.cert_transparency_policy
+
         conn = self.ConnectionCls(
             host=self.host,
             port=self.port,
-            timeout=self.timeout,
-            **self.conn_kw,
+            timeout=timeout,
+            **conn_kw,
         )
         return conn
         
@@ -140,35 +157,43 @@ class HTTPConnectionPool(ConnectionPool):
     ):
         """
         Make a request using a connection from the pool.
-        
-        :param method: HTTP method
-        :param url: URL to request
-        :param body: Request body
-        :param headers: Request headers
-        :param retries: Retry configuration
-        :param redirect: Whether to follow redirects
-        :param assert_same_host: Whether to assert the host is the same
-        :param timeout: Socket timeout
-        :param pool_timeout: Pool timeout
-        :param release_conn: Whether to release the connection back to the pool
-        :param chunked: Whether to use chunked encoding
-        :param body_pos: Position in the body
-        :param response_kw: Additional parameters for the response
-        :return: HTTPResponse
         """
-        # This is a stub implementation
         from .response import HTTPResponse
         
-        return HTTPResponse(
-            body=b"",
-            headers={},
-            status=200,
-            version=11,
-            reason="OK",
-            preload_content=True,
-            decode_content=True,
-            request_url=url,
-        )
+        # In a real implementation, we would handle retries, redirects, etc.
+        # For this enhancement, we'll implement a basic functional version.
+        
+        conn = self._get_conn()
+        try:
+            # http.client.request expects only the path for the URL in request
+            # if it's already connected to the host.
+            parsed = urlparse(url)
+            path = parsed.path
+            if parsed.query:
+                path += "?" + parsed.query
+            if not path:
+                path = "/"
+                
+            conn.request(method, path, body=body, headers=headers or {})
+            res = conn.getresponse()
+            
+            response = HTTPResponse(
+                body=res.read(),
+                headers=dict(res.getheaders()),
+                status=res.status,
+                version=res.version,
+                reason=res.reason,
+                preload_content=True,
+                decode_content=True,
+                request_url=url,
+            )
+            return response
+        finally:
+            if release_conn:
+                self._put_conn(conn)
+            else:
+                conn.close()
+                self.num_connections -= 1
 
 
 class HTTPSConnectionPool(HTTPConnectionPool):

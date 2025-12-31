@@ -27,6 +27,9 @@ class PoolManager:
         self,
         num_pools=10,
         headers=None,
+        hsts_enabled=True,
+        spki_pins=None,
+        cert_transparency_policy=None,
         **connection_pool_kw,
     ):
         """
@@ -34,6 +37,9 @@ class PoolManager:
         
         :param num_pools: Number of connection pools to cache
         :param headers: Headers to include with every request
+        :param hsts_enabled: Whether to enable HSTS (HTTP Strict Transport Security)
+        :param spki_pins: Dictionary mapping hostnames to sets of SPKI pins
+        :param cert_transparency_policy: Certificate Transparency policy
         :param connection_pool_kw: Additional parameters for connection pools
         """
         self.connection_pool_kw = connection_pool_kw.copy()
@@ -41,16 +47,41 @@ class PoolManager:
         self.num_pools = num_pools
         self.headers = headers or {}
         
+        # Security features
+        self.hsts_enabled = hsts_enabled
+        self.spki_pins = spki_pins
+        self.cert_transparency_policy = cert_transparency_policy
+        
+        if self.hsts_enabled:
+            from .util.hsts import HSTSHandler
+            self.hsts_handler = HSTSHandler()
+        else:
+            self.hsts_handler = None
+
     def connection_from_url(self, url, **kw):
         """
         Get a connection pool for a URL.
-        
-        :param url: URL to get a connection pool for
-        :param kw: Additional parameters for the connection pool
-        :return: Connection pool for the URL
         """
-        # This is a stub implementation
-        return None
+        from .connectionpool import connection_from_url as pool_from_url
+        
+        parsed = urlparse(url)
+        key = (parsed.scheme, parsed.netloc)
+        
+        if key not in self.pools:
+            if len(self.pools) >= self.num_pools:
+                # Simple cache eviction
+                self.pools.pop(next(iter(self.pools)))
+            
+            pool_kw = self.connection_pool_kw.copy()
+            pool_kw.update(kw)
+            
+            # Pass security settings to the pool
+            pool_kw["spki_pins"] = self.spki_pins
+            pool_kw["cert_transparency_policy"] = self.cert_transparency_policy
+            
+            self.pools[key] = pool_from_url(url, **pool_kw)
+            
+        return self.pools[key]
         
     def request(
         self,
@@ -60,25 +91,24 @@ class PoolManager:
     ):
         """
         Make a request using the appropriate connection pool.
-        
-        :param method: HTTP method
-        :param url: URL to request
-        :param kw: Additional parameters for the request
-        :return: HTTPResponse
         """
-        # This is a stub implementation
-        from .response import HTTPResponse
+        # HSTS URL Upgrade
+        if self.hsts_handler:
+            url = self.hsts_handler.secure_url(url)
+
+        # Merge global headers with request headers
+        headers = self.headers.copy()
+        headers.update(kw.get("headers", {}))
+        kw["headers"] = headers
         
-        return HTTPResponse(
-            body=b"",
-            headers={},
-            status=200,
-            version=11,
-            reason="OK",
-            preload_content=True,
-            decode_content=True,
-            request_url=url,
-        )
+        pool = self.connection_from_url(url)
+        response = pool.urlopen(method, url, **kw)
+        
+        # Process HSTS headers in response
+        if self.hsts_handler:
+            self.hsts_handler.process_response(url, response.headers)
+            
+        return response
 
 
 class ProxyManager(PoolManager):

@@ -56,15 +56,10 @@ class HTTPConnection(http.client.HTTPConnection):
         timeout=socket._GLOBAL_DEFAULT_TIMEOUT,
         source_address=None,
         blocksize=8192,
+        **kwargs,
     ):
         """
         Initialize a new HTTPConnection.
-
-        :param host: Host to connect to
-        :param port: Port to connect to
-        :param timeout: Socket timeout
-        :param source_address: Source address to bind to
-        :param blocksize: Block size for reading
         """
         super().__init__(
             host=host,
@@ -97,33 +92,75 @@ class HTTPSConnection(http.client.HTTPSConnection):
         source_address=None,
         context=None,
         blocksize=8192,
+        **kwargs,
     ):
         """
         Initialize a new HTTPSConnection.
-
-        :param host: Host to connect to
-        :param port: Port to connect to
-        :param key_file: Path to the key file
-        :param cert_file: Path to the certificate file
-        :param timeout: Socket timeout
-        :param source_address: Source address to bind to
-        :param context: SSL context
-        :param blocksize: Block size for reading
         """
-        super().__init__(
-            host=host,
-            port=port,
-            key_file=key_file,
-            cert_file=cert_file,
-            timeout=timeout,
-            source_address=source_address,
-            context=context,
-            blocksize=blocksize,
-        )
+        # Python 3.12+ deprecated/removed key_file and cert_file in favor of context.
+        # We handle them here for backwards compatibility if needed.
+        if (key_file or cert_file) and not context:
+            context = ssl.create_default_context()
+            if cert_file:
+                context.load_cert_chain(cert_file, key_file)
+        
+        # Filter out arguments that http.client.HTTPSConnection might not support in newer Python versions
+        init_kwargs = {
+            "host": host,
+            "port": port,
+            "timeout": timeout,
+            "source_address": source_address,
+            "context": context,
+            "blocksize": blocksize,
+        }
+        
+        self.spki_pins = kwargs.pop("spki_pins", None)
+        self.cert_transparency_policy = kwargs.pop("cert_transparency_policy", None)
+
+        # Only pass check_hostname if it's explicitly provided and supported
+        if "check_hostname" in kwargs:
+            init_kwargs["check_hostname"] = kwargs.pop("check_hostname")
+
+        super().__init__(**init_kwargs)
 
     def connect(self):
         """Connect to the host and port specified in __init__."""
-        return super().connect()
+        super().connect()
+        
+        if self.spki_pins or self.cert_transparency_policy:
+            self._verify_security()
+
+    def _verify_security(self):
+        """Perform SPKI pinning and Certificate Transparency verification."""
+        if not self.sock:
+            return
+
+        # Get the binary certificate
+        binary_cert = self.sock.getpeercert(binary_form=True)
+        if not binary_cert:
+            log.warning("Could not get peer certificate for security verification")
+            return
+
+        from cryptography import x509
+        cert = x509.load_der_x509_certificate(binary_cert)
+
+        # 1. Verify SPKI Pinning
+        if self.spki_pins:
+            from .util.cert_verification import SPKIPinningVerifier
+            verifier = SPKIPinningVerifier(self.spki_pins)
+            if not verifier.verify_cert_for_host(cert, self.host):
+                self.close()
+                from .exceptions import SSLError
+                raise SSLError(f"SPKI pinning verification failed for {self.host}")
+
+        # 2. Verify Certificate Transparency
+        if self.cert_transparency_policy:
+            from .util.cert_verification import CertificateTransparencyVerifier
+            verifier = CertificateTransparencyVerifier(policy=self.cert_transparency_policy)
+            if not verifier.verify_cert(cert):
+                self.close()
+                from .exceptions import SSLError
+                raise SSLError(f"Certificate Transparency verification failed for {self.host}")
 
 
 class DummyConnection:

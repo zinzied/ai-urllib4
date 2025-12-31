@@ -28,13 +28,13 @@ class CertificateTransparencyPolicy(Enum):
     """Policy for Certificate Transparency verification."""
 
     # Don't verify SCTs
-    DISABLED = auto()
+    DISABLED = 0
 
     # Verify SCTs if present, but don't fail if missing
-    BEST_EFFORT = auto()
+    BEST_EFFORT = 1
 
     # Require valid SCTs
-    STRICT = auto()
+    STRICT = 2
 
 
 @dataclass
@@ -87,10 +87,10 @@ class SignedCertificateTimestamp:
 class SCTVerificationResult(Enum):
     """Result of SCT verification."""
 
-    VALID = auto()
-    INVALID_SIGNATURE = auto()
-    UNKNOWN_LOG = auto()
-    INVALID_FORMAT = auto()
+    VALID = 0
+    INVALID_SIGNATURE = 1
+    UNKNOWN_LOG = 2
+    INVALID_FORMAT = 3
 
 
 class CertificateTransparencyVerifier:

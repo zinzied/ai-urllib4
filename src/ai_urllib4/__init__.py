@@ -33,6 +33,7 @@ from .poolmanager import PoolManager, ProxyManager, proxy_from_url
 from .response import BaseHTTPResponse, HTTPResponse
 from .util.timeout import Timeout
 from .util.retry import Retry, RequestHistory
+from .smart_client import SmartClient
 
 # Import HTTP/2 components
 from .http2 import ConnectionProfile, FlowControlStrategy, HTTP2Settings
@@ -52,6 +53,7 @@ __all__ = (
     "HTTPHeaderDict",
     "PoolManager",
     "ProxyManager",
+    "SmartClient",
     "HTTPResponse",
     "BaseHTTPResponse",
     "Timeout",
