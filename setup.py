@@ -7,13 +7,13 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="ai-urllib4",
-    version="2.1.1",
+    version="2.1.2",
     description="A modern HTTP client for Python with HTTP/3, WebSocket extensions, and enhanced security features",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="Zied Boughdir",
     author_email="ziedboughdir@gmail.com",
-    url="https://github.com/zinzied/urllib4-enhanced",
+    url="https://github.com/zinzied/ai-urllib4",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     classifiers=[
