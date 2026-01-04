@@ -10,6 +10,7 @@ from typing import Dict, Any, Optional
 
 from .poolmanager import PoolManager
 from .ai import AISmartConfig, optimize_params_for, GeminiBackend
+from .discovery import APIDiscoverer
 from .response import HTTPResponse
 from .exceptions import AIInitializationError
 
@@ -57,8 +58,9 @@ class SmartClient(PoolManager):
         
         try:
             self.ai_config = AISmartConfig(backend=self.ai_backend)
+            self.discoverer = APIDiscoverer(ai_backend=self.ai_backend)
         except Exception as e:
-            raise AIInitializationError(f"Failed to initialize AI config: {e}")
+            raise AIInitializationError(f"Failed to initialize AI components: {e}")
 
     def request(
         self, 
@@ -124,3 +126,58 @@ class SmartClient(PoolManager):
         Analyze a response for potential anomalies or bot detection.
         """
         return self.ai_config.detect_anomaly(response)
+
+    def discover_api(self, url: str, **kwargs) -> Optional[HTTPResponse]:
+        """
+        Attempt to automatically discover and fetch data from a hidden JSON API.
+        """
+        # 1. Fetch the original page
+        log.info(f"Analyzing {url} for hidden APIs...")
+        response = self.request("GET", url, **kwargs)
+        
+        if not response.data:
+            return None
+
+        # 2. Check if the original response is already JSON
+        content_type = response.headers.get("Content-Type", "").lower()
+        if "application/json" in content_type:
+             log.info(f"Original URL {url} is already a JSON API.")
+             setattr(response, "discovered_from", url)
+             try:
+                 setattr(response, "json_data", json.loads(response.data))
+             except:
+                 pass
+             return response
+
+        # 3. Extract potential endpoints
+        html = response.data.decode(errors="ignore")
+        candidates = self.discoverer.find_potential_endpoints(html, url)
+        
+        if not candidates:
+            log.info("No API candidates found via heuristics.")
+            return None
+
+        # 3. Select the best one
+        best_api = self.discoverer.select_best_endpoint(url, candidates)
+        if not best_api:
+            return None
+
+        log.info(f"Discovered potential API: {best_api}")
+        
+        # 4. Fetch from the API
+        api_response = self.request("GET", best_api, **kwargs)
+        
+        # 5. Check if it's actually JSON
+        content_type = api_response.headers.get("Content-Type", "").lower()
+        if "application/json" in content_type:
+            log.info("Successfully matched JSON API!")
+            # Add discovery metadata to the response
+            setattr(api_response, "discovered_from", url)
+            try:
+                setattr(api_response, "json_data", json.loads(api_response.data))
+            except:
+                pass
+            return api_response
+            
+        log.warning(f"Discovered URL {best_api} did not return valid JSON.")
+        return None

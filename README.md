@@ -290,6 +290,14 @@ Key features:
 - **Header Optimization**: Suggests and rotates headers based on learned history.
 - **Retry Intelligence**: Adapts retry logic using AI strategies (e.g., increasing delay after a 403).
 - **LLM Backends**: Supports pluggable AI expert advice via Gemini and others.
+- **Hidden API Discovery**: Automatically find internal JSON backends for any HTML page.
+
+```python
+# Automatically find and fetch data from a site's internal JSON API
+response = client.discover_api("https://www.reddit.com/r/python/")
+if response:
+    print(f"Clean JSON data: {response.json_data}")
+```
 
 ### 🚀 AsyncIO Support
 
