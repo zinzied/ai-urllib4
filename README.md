@@ -1,6 +1,6 @@
 <h1 align="center">
 
-# urllib4: An Enhanced HTTP Client for Python
+# ai-urllib4: An Enhanced AI HTTP Client for Python
 
 </h1>
 
@@ -10,11 +10,11 @@
   <a href="https://github.com/zinzied/ai-urllib4"><img alt="Development Stage" src="https://img.shields.io/badge/stage-stable-green" /></a>
 </p>
 
-ai-urllib4 is a modern HTTP client for Python that builds upon the foundation of urllib3 while adding enhancements for modern web applications. It provides a powerful yet user-friendly interface for making HTTP requests with advanced features.
+ai-urllib4 is a modern AI-powered HTTP client for Python that builds upon the foundation of urllib3 while adding enhancements for modern web applications. It provides a powerful yet user-friendly interface for making HTTP requests with advanced features.
 
 ## Features
 
-urllib4 provides a comprehensive set of features for modern web applications:
+ai-urllib4 provides a comprehensive set of features for modern web applications:
 
 ### ✅ Core Features:
 - Connection pooling and thread safety
@@ -69,7 +69,7 @@ b"User-agent: *\nDisallow: /deny\n"
 
 ## Installation
 
-You can install urllib4 with pip:
+You can install ai-urllib4 with pip:
 
 ```bash
 $ pip install ai-urllib4
@@ -374,6 +374,7 @@ While `ai-urllib4` is built on the solid foundation of `urllib3`, it introduces 
 | **Configuration** | Manual Tuning | 🤖 **AI Smart Config** (Heuristic optimization) |
 | **HTTP/2 & 3** | Experimental / Partial | ✅ **First-Class Support** (Multipath QUIC, etc.) |
 | **WebSocket** | Limited / Extension needed | ✅ **Built-in Advanced Support** (Subprotocols, etc.) |
+| **Auto-Discovery** | ❌ Manual Scraping only | 🕵️ **AI API Discovery** (**New in v2.2!**) |
 
 ### Key Differentiators:
 
